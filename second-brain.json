@@ -16,7 +16,7 @@
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.4,
       "position": [
-        1632,
+        1832,
         896
       ],
       "id": "71117c6a-59fd-4b1b-a07c-d9d7fd0cc48c",
@@ -63,6 +63,18 @@
               "name": "text",
               "value": "={{$json.body.event.text}}",
               "type": "string"
+            },
+            {
+              "id": "user_id_assignment",
+              "name": "user_id",
+              "value": "={{$json.body.event.user}}",
+              "type": "string"
+            },
+            {
+              "id": "channel_id_assignment",
+              "name": "channel_id",
+              "value": "={{$json.body.event.channel}}",
+              "type": "string"
             }
           ]
         },
@@ -95,13 +107,13 @@
         "jsonOutput": true,
         "builtInTools": {},
         "options": {
-          "systemMessage": "You are a strict JSON generator for a Second Brain system.\n\nYour task:\n1. Classify the input into ONE of these types:\n   - people\n   - projects\n   - ideas\n   - admin\n\n2. Based on the type, output JSON that matches the EXACT schema for that type.\n\nYou MUST output valid JSON only.\nNo markdown.\nNo explanation.\nNo extra keys.\nNo missing keys.\n\nSCHEMAS:\n\nIf type = \"people\", output:\n{\n  \"type\": \"people\",\n  \"name\": \"string\",\n  \"context\": \"string\",\n  \"follow_ups\": \"string\",\n  \"confidence\": number\n}\n\nIf type = \"projects\", output:\n{\n  \"type\": \"projects\",\n  \"name\": \"string\",\n  \"status\": \"Active | Waiting | Blocked | Someday | Done\",\n  \"next_action\": \"string\",\n  \"notes\": \"string\",\n  \"confidence\": number\n}\n\nIf type = \"ideas\", output:\n{\n  \"type\": \"ideas\",\n  \"name\": \"string\",\n  \"one_liner\": \"string\",\n  \"notes\": \"string\",\n  \"confidence\": number\n}\n\nIf type = \"admin\", output:\n{\n  \"type\": \"admin\",\n  \"name\": \"string\",\n  \"due_date\": \"YYYY-MM-DD or empty string\",\n  \"confidence\": number\n  \"status\": \"Open | Done\"\n}\n\nRules:\n- Choose the schema strictly based on type\n- Use empty strings if information is missing\n- Confidence must be between 0 and 1\n- If unsure, confidence must be below 0.6\n"
+          "systemMessage": "You are a strict JSON generator for a Second Brain system.\n\nYour task:\n1. Analyze the input and the provided Context (Author).\n2. Classify the input into ONE of these types:\n   - people\n   - projects\n   - ideas\n   - admin\n   - events\n\n3. Based on the type, output JSON that matches the EXACT schema for that type.\n\nYou MUST output valid JSON only.\nNo markdown.\nNo explanation.\nNo extra keys.\nNo missing keys.\n\nSCHEMAS:\n\nIf type = \"people\", output:\n{\n  \"type\": \"people\",\n  \"name\": \"string\",\n  \"context\": \"string\",\n  \"follow_ups\": \"string\",\n  \"confidence\": number\n}\n\nIf type = \"projects\", output:\n{\n  \"type\": \"projects\",\n  \"name\": \"string\",\n  \"status\": \"Active | Waiting | Blocked | Someday | Done\",\n  \"next_action\": \"string\",\n  \"notes\": \"string\",\n  \"confidence\": number\n}\n\nIf type = \"ideas\", output:\n{\n  \"type\": \"ideas\",\n  \"name\": \"string\",\n  \"one_liner\": \"string\",\n  \"notes\": \"string\",\n  \"confidence\": number\n}\n\nIf type = \"admin\", output:\n{\n  \"type\": \"admin\",\n  \"name\": \"string\",\n  \"due_date\": \"YYYY-MM-DD or empty string\",\n  \"assignee\": \"string (Me | Maggie | Other)\",\n  \"status\": \"Open | Done\",\n  \"confidence\": number\n}\n\nIf type = \"events\", output:\n{\n  \"type\": \"events\",\n  \"name\": \"string\",\n  \"start_time\": \"YYYY-MM-DD HH:mm or YYYY-MM-DD\",\n  \"end_time\": \"YYYY-MM-DD HH:mm or empty string\",\n  \"is_all_day\": boolean,\n  \"location\": \"string\",\n  \"description\": \"string\",\n  \"calendar\": \"personal | family | maggie\",\n  \"confidence\": number\n}\n\nRules:\n- Choose the schema strictly based on type.\n- Use empty strings if information is missing.\n- Confidence must be between 0 and 1.\n- If unsure, confidence must be below 0.6.\n- **Context Handling**:\n  - If the context indicates the message is from Maggie, append \"(From Maggie)\" to the notes/description.\n  - If the message implies a task for the user (even if from Maggie), classify as \"admin\".\n  - If the message implies a shared event (e.g., \"we have dinner\"), set calendar to \"family\".\n  - If the message is about Maggie's schedule, set calendar to \"maggie\".\n  - Default calendar is \"personal\".\n"
         }
       },
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1.1,
       "position": [
-        368,
+        568,
         0
       ],
       "id": "936e2951-c116-464c-967b-68092c1521c5",
@@ -130,7 +142,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        720,
+        920,
         0
       ],
       "id": "d8b27550-70e6-4e1b-905e-4d8a447bf93c",
@@ -230,6 +242,29 @@
                 ],
                 "combinator": "and"
               }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "events_condition_id",
+                    "leftValue": "={{$node[\"Confidence Gate\"].json.parsed.type}}",
+                    "rightValue": "events",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
             }
           ]
         },
@@ -238,7 +273,7 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        1344,
+        1544,
         -48
       ],
       "id": "80413c83-2288-4068-a363-f7a925211d14",
@@ -283,7 +318,7 @@
       "type": "n8n-nodes-base.notion",
       "typeVersion": 2.2,
       "position": [
-        1152,
+        1352,
         -16
       ],
       "id": "0795e605-f328-4ef9-9ef2-c05d07881339",
@@ -322,7 +357,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        928,
+        1328,
         0
       ],
       "id": "fb808a77-f62e-4c02-aa36-c7727c146f01",
@@ -359,7 +394,7 @@
       "type": "n8n-nodes-base.notion",
       "typeVersion": 2.2,
       "position": [
-        1552,
+        1752,
         -256
       ],
       "id": "24513a88-4794-4286-9615-fcc66d930947",
@@ -406,7 +441,7 @@
       "type": "n8n-nodes-base.notion",
       "typeVersion": 2.2,
       "position": [
-        1648,
+        1848,
         -144
       ],
       "id": "0dd99191-5648-401f-bfe3-b8b5c0d32ac7",
@@ -449,7 +484,7 @@
       "type": "n8n-nodes-base.notion",
       "typeVersion": 2.2,
       "position": [
-        1776,
+        1976,
         48
       ],
       "id": "3818f8cc-1393-4ac3-9eba-96551b92edfc",
@@ -488,7 +523,7 @@
       "type": "n8n-nodes-base.notion",
       "typeVersion": 2.2,
       "position": [
-        1616,
+        1816,
         176
       ],
       "id": "e3779f2b-f48e-4473-91f2-b92869f87dd3",
@@ -543,7 +578,7 @@
       "type": "n8n-nodes-base.notion",
       "typeVersion": 2.2,
       "position": [
-        1120,
+        1320,
         128
       ],
       "id": "a1b4ccaf-867b-4827-8f17-09dc7bce8abf",
@@ -760,13 +795,13 @@
         },
         "builtInTools": {},
         "options": {
-          "systemMessage": "You are a daily executive assistant.\n\nCreate a concise daily digest.\nMax 150 words.\nTone: calm, direct, practical.\n\nStructure:\n- Today’s focus (max 3 items)\n- Overdue or risky item (if any)\n- Optional small win or progress\n\nRules:\n- Use only the provided data\n- Do not invent items\n- Do not ask questions\n- No emojis\n- Do NOT use markdown. Output plain text only."
+          "systemMessage": "You are a daily executive assistant.\n\nCreate a concise daily digest.\nMax 150 words.\nTone: calm, direct, practical.\n\nStructure:\n- Today\u2019s focus (max 3 items)\n- Overdue or risky item (if any)\n- Optional small win or progress\n\nRules:\n- Use only the provided data\n- Do not invent items\n- Do not ask questions\n- No emojis\n- Do NOT use markdown. Output plain text only."
         }
       },
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1.1,
       "position": [
-        1280,
+        1480,
         896
       ],
       "id": "486cabf1-1e02-4442-b3dc-6af469ad5d21",
@@ -785,7 +820,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1088,
+        1288,
         896
       ],
       "id": "b0acba6f-7368-4335-8a2f-8c47a770750d",
@@ -793,7 +828,7 @@
     },
     {
       "parameters": {
-        "content": "## Data Collection Flow \n - Webhook → Receives Slack Events (POST /slack-events)\n - Extract Text → Pulls message text from body.event.text\n - LLM Classifier → Gemini classifies input into people | projects | ideas | admin (strict JSON)\n - JSON Parse → Converts model output text into structured JSON\n - Confidence Gate → confidence > 0.6 auto-file, else mark Needs Review\n - Inbox Log → Logs every message with text, type, confidence, timestamp\n - Type Router → Routes item based on parsed.type\n - People DB → Stores contacts, context, follow-ups\n - Projects DB → Stores project name, status, next action, notes\n - Ideas DB → Stores idea name, one-liner, notes\n - Admin DB → Stores admin tasks with optional due date\n - Needs Review Path → Low-confidence items flagged for manual review",
+        "content": "## Data Collection Flow \n - Webhook \u2192 Receives Slack Events (POST /slack-events)\n - Extract Text \u2192 Pulls message text from body.event.text\n - LLM Classifier \u2192 Gemini classifies input into people | projects | ideas | admin (strict JSON)\n - JSON Parse \u2192 Converts model output text into structured JSON\n - Confidence Gate \u2192 confidence > 0.6 auto-file, else mark Needs Review\n - Inbox Log \u2192 Logs every message with text, type, confidence, timestamp\n - Type Router \u2192 Routes item based on parsed.type\n - People DB \u2192 Stores contacts, context, follow-ups\n - Projects DB \u2192 Stores project name, status, next action, notes\n - Ideas DB \u2192 Stores idea name, one-liner, notes\n - Admin DB \u2192 Stores admin tasks with optional due date\n - Needs Review Path \u2192 Low-confidence items flagged for manual review",
         "height": 736,
         "width": 2160
       },
@@ -808,7 +843,7 @@
     },
     {
       "parameters": {
-        "content": "## Daily briefing pipeline overview \n - Schedule Trigger → Runs daily at 9 AM\n - People Log → Fetches People records edited on or before today\n - Ideas Log → Fetches Ideas records edited on or before today\n - Projects Log → Fetches Projects records edited on or before today\n - Admin Log → Fetches Admin records edited on or before today\n - Merge → Combines outputs from all four Notion databases\n - Code (JS) → Flattens all records into a single list and forces single execution\n - LLM Digest → Gemini generates a concise daily executive summary (plain text)\n - Slack Send → Posts the daily digest to #sb-inbox channel\n",
+        "content": "## Daily briefing pipeline overview \n - Schedule Trigger \u2192 Runs daily at 9 AM\n - People Log \u2192 Fetches People records edited on or before today\n - Ideas Log \u2192 Fetches Ideas records edited on or before today\n - Projects Log \u2192 Fetches Projects records edited on or before today\n - Admin Log \u2192 Fetches Admin records edited on or before today\n - Merge \u2192 Combines outputs from all four Notion databases\n - Code (JS) \u2192 Flattens all records into a single list and forces single execution\n - LLM Digest \u2192 Gemini generates a concise daily executive summary (plain text)\n - Slack Send \u2192 Posts the daily digest to #sb-inbox channel\n",
         "height": 784,
         "width": 2160
       },
@@ -820,6 +855,350 @@
       "typeVersion": 1,
       "id": "92ff76aa-bed7-4bcc-99e8-f5328e327fb7",
       "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Map Slack User IDs to Names\n// Replace 'U123456' with actual Slack User IDs\nconst userMap = {\n  'WIFE_SLACK_ID_PLACEHOLDER': 'Maggie',\n  'MY_SLACK_ID_PLACEHOLDER': 'Me'\n};\n\nconst userId = $input.item.json.user_id;\nconst author = userMap[userId] || 'Unknown';\n\nreturn {\n  json: {\n    ...$input.item.json,\n    author: author,\n    context_string: `Author: ${author}`\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        288,
+        0
+      ],
+      "id": "enrich-context-node-id",
+      "name": "Enrich Context"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "VIKUNJA_API_URL/projects/VIKUNJA_PROJECT_ID/tasks",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer VIKUNJA_API_TOKEN"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "title",
+              "value": "={{$('Confidence Gate').item.json.parsed.name}}"
+            },
+            {
+              "name": "description",
+              "value": "={{$('Confidence Gate').item.json.parsed.notes}}"
+            },
+            {
+              "name": "due_date",
+              "value": "={{$('Confidence Gate').item.json.parsed.due_date}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Vikunja Task",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1820,
+        350
+      ],
+      "id": "vikunja_task_node_id"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "has_due_date_cond",
+              "leftValue": "={{$('Confidence Gate').item.json.parsed.due_date}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "name": "Has Due Date?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1820,
+        500
+      ],
+      "id": "has_due_date_node_id"
+    },
+    {
+      "parameters": {
+        "calendarId": {
+          "__rl": true,
+          "value": "PERSONAL_CALENDAR_ID",
+          "mode": "list",
+          "cachedResultName": "Personal"
+        },
+        "start": "={{$('Confidence Gate').item.json.parsed.due_date}}",
+        "end": "={{$('Confidence Gate').item.json.parsed.due_date}}",
+        "additionalFields": {
+          "summary": "={{ \"Due: \" + $json.parsed.name }}",
+          "description": "={{$('Confidence Gate').item.json.parsed.notes}}"
+        },
+        "allday": true
+      },
+      "name": "GCal Due Date",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1,
+      "position": [
+        2050,
+        500
+      ],
+      "id": "gcal_due_node_id",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "GOOGLE_CALENDAR_CRED_ID",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "EVENTS_DB_ID_PLACEHOLDER",
+          "mode": "list",
+          "cachedResultName": "Events Database"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Name|title",
+              "title": "={{$('Confidence Gate').item.json.parsed.name}}"
+            },
+            {
+              "key": "Date|date",
+              "start": "={{$('Confidence Gate').item.json.parsed.start_time}}",
+              "end": "={{$('Confidence Gate').item.json.parsed.end_time}}"
+            },
+            {
+              "key": "Location|rich_text",
+              "textContent": "={{$('Confidence Gate').item.json.parsed.location}}"
+            },
+            {
+              "key": "Description|rich_text",
+              "textContent": "={{$('Confidence Gate').item.json.parsed.description}}"
+            },
+            {
+              "key": "Calendar|select",
+              "selectValue": "={{$('Confidence Gate').item.json.parsed.calendar}}"
+            }
+          ]
+        }
+      },
+      "name": "Events Database",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1820,
+        700
+      ],
+      "id": "events_db_node_id",
+      "credentials": {
+        "notionApi": {
+          "id": "ustHcsOuGfVRY1kM",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$('Confidence Gate').item.json.parsed.calendar}}",
+                    "rightValue": "family",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$('Confidence Gate').item.json.parsed.calendar}}",
+                    "rightValue": "maggie",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$('Confidence Gate').item.json.parsed.calendar}}",
+                    "rightValue": "personal",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        }
+      },
+      "name": "Calendar Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        1820,
+        900
+      ],
+      "id": "calendar_router_node_id"
+    },
+    {
+      "parameters": {
+        "calendarId": {
+          "__rl": true,
+          "value": "FAMILY_CALENDAR_ID",
+          "mode": "list",
+          "cachedResultName": "Family"
+        },
+        "start": "={{$('Confidence Gate').item.json.parsed.start_time}}",
+        "end": "={{$('Confidence Gate').item.json.parsed.end_time}}",
+        "additionalFields": {
+          "summary": "={{$('Confidence Gate').item.json.parsed.name}}",
+          "description": "={{$('Confidence Gate').item.json.parsed.description}}",
+          "location": "={{$('Confidence Gate').item.json.parsed.location}}"
+        },
+        "allday": "={{$('Confidence Gate').item.json.parsed.is_all_day}}"
+      },
+      "name": "GCal Family",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1,
+      "position": [
+        2100,
+        800
+      ],
+      "id": "gcal_family_node_id",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "GOOGLE_CALENDAR_CRED_ID",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendarId": {
+          "__rl": true,
+          "value": "WIFE_CALENDAR_ID",
+          "mode": "list",
+          "cachedResultName": "Maggie"
+        },
+        "start": "={{$('Confidence Gate').item.json.parsed.start_time}}",
+        "end": "={{$('Confidence Gate').item.json.parsed.end_time}}",
+        "additionalFields": {
+          "summary": "={{$('Confidence Gate').item.json.parsed.name}}",
+          "description": "={{$('Confidence Gate').item.json.parsed.description}}",
+          "location": "={{$('Confidence Gate').item.json.parsed.location}}"
+        },
+        "allday": "={{$('Confidence Gate').item.json.parsed.is_all_day}}"
+      },
+      "name": "GCal Maggie",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1,
+      "position": [
+        2100,
+        950
+      ],
+      "id": "gcal_maggie_node_id",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "GOOGLE_CALENDAR_CRED_ID",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendarId": {
+          "__rl": true,
+          "value": "PERSONAL_CALENDAR_ID",
+          "mode": "list",
+          "cachedResultName": "Personal"
+        },
+        "start": "={{$('Confidence Gate').item.json.parsed.start_time}}",
+        "end": "={{$('Confidence Gate').item.json.parsed.end_time}}",
+        "additionalFields": {
+          "summary": "={{$('Confidence Gate').item.json.parsed.name}}",
+          "description": "={{$('Confidence Gate').item.json.parsed.description}}",
+          "location": "={{$('Confidence Gate').item.json.parsed.location}}"
+        },
+        "allday": "={{$('Confidence Gate').item.json.parsed.is_all_day}}"
+      },
+      "name": "GCal Personal",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1,
+      "position": [
+        2100,
+        1100
+      ],
+      "id": "gcal_personal_node_id",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "GOOGLE_CALENDAR_CRED_ID",
+          "name": "Google Calendar account"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -829,17 +1208,6 @@
         [
           {
             "node": "Extract Text",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Extract Text": {
-      "main": [
-        [
-          {
-            "node": "Message a model1",
             "type": "main",
             "index": 0
           }
@@ -923,6 +1291,28 @@
         [
           {
             "node": "Admin Database",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Vikunja Task",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Has Due Date?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Events Database",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Calendar Router",
             "type": "main",
             "index": 0
           }
@@ -1030,6 +1420,66 @@
             "index": 0
           }
         ]
+      ]
+    },
+    "Extract Text": {
+      "main": [
+        [
+          {
+            "node": "Enrich Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrich Context": {
+      "main": [
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Due Date?": {
+      "main": [
+        [
+          {
+            "node": "GCal Due Date",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Calendar Router": {
+      "main": [
+        [
+          {
+            "node": "GCal Family",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "GCal Maggie",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "GCal Personal",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
       ]
     }
   },
