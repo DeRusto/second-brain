@@ -815,7 +815,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Grab all data from the 4 Notion nodes, regardless of how many runs they had\nconst people = $(\"People Log\").all();\nconst ideas = $(\"Ideas Log\").all();\nconst projects = $(\"Projects Log\").all();\nconst admin = $(\"Admin Log\").all();\n\n// Combine them into one clean list\nconst combined = [\n  ...people,\n  ...ideas,\n  ...projects,\n  ...admin\n].map(item => item.json);\n\n// Return as a single item so the next node (Gemini) only runs ONCE\nreturn [{\n  json: {\n    all_data: combined,\n    count: combined.length\n  }\n}];"
+        "jsCode": "// Grab all data from the 4 Notion nodes, regardless of how many runs they had\nconst people = $(\"People Log\").all();\nconst ideas = $(\"Ideas Log\").all();\nconst projects = $(\"Projects Log\").all();\nconst admin = $(\"Admin Log\").all();\n\n// Combine them into one clean list\nconst combined = [];\nfor (const item of people) combined.push(item.json);\nfor (const item of ideas) combined.push(item.json);\nfor (const item of projects) combined.push(item.json);\nfor (const item of admin) combined.push(item.json);\n\n// Return as a single item so the next node (Gemini) only runs ONCE\nreturn [{\n  json: {\n    all_data: combined,\n    count: combined.length\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
