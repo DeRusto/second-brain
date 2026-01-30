@@ -955,7 +955,7 @@
         "start": "={{$('Confidence Gate').item.json.parsed.due_date}}",
         "end": "={{$('Confidence Gate').item.json.parsed.due_date}}",
         "additionalFields": {
-          "summary": "={{ \"Due: \" + $json.parsed.name }}",
+          "summary": "={{ \"Due: \" + $('Confidence Gate').item.json.parsed.name }}",
           "description": "={{$('Confidence Gate').item.json.parsed.notes}}"
         },
         "allday": true
@@ -1082,10 +1082,18 @@
                 "conditions": [
                   {
                     "leftValue": "={{$('Confidence Gate').item.json.parsed.calendar}}",
-                    "rightValue": "personal",
+                    "rightValue": "family",
                     "operator": {
                       "type": "string",
-                      "operation": "equals"
+                      "operation": "notEquals"
+                    }
+                  },
+                  {
+                    "leftValue": "={{$('Confidence Gate').item.json.parsed.calendar}}",
+                    "rightValue": "maggie",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
                     }
                   }
                 ],
