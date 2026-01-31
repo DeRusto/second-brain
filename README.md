@@ -143,7 +143,6 @@ graph LR
 |-------|------|---------|
 | Name | Title | Task name |
 | Due Date | Date | Deadline |
-| Notes | Rich Text | Task details/description |
 | Status | Select | Open / Done |
 
 ### 5. Inbox Log (Audit Trail)

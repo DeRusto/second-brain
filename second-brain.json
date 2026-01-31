@@ -100,7 +100,7 @@
         "messages": {
           "values": [
             {
-              "content": "={{($json.context_string || '') + '\\n\\n' + $json.text}}"
+              "content": "={{$json.context_string + '\\n\\n' + $json.text}}"
             }
           ]
         },
@@ -513,16 +513,12 @@
               "title": "={{$node[\"Confidence Gate\"].json.parsed.name}}"
             },
             {
-              "key": "Notes|rich_text",
-              "textContent": "={{$node[\"Confidence Gate\"].json.parsed.notes}}"
-            },
-            {
               "key": "Due Date|date",
               "range": "={{$node[\"Confidence Gate\"].json.parsed.due_date}}"
             },
             {
-              "key": "Asignee|select",
-              "selectValue": "={{$node[\"Confidence Gate\"].json.parsed.assignee || 'Brandon'}}"
+              "key": "Notes|rich_text",
+              "textContent": "={{$node[\"Confidence Gate\"].json.parsed.notes}}"
             },
             {
               "key": "Status|select",
