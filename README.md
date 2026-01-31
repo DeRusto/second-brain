@@ -13,7 +13,7 @@ We have moved the deep-dive setup guides to separate documents to keep this READ
 *   **[1. Notion Setup Guide](/docs/notion-setup.md)** (Critical: Start here to build your database backend)
 *   **[2. n8n Workflow Setup](/docs/n8n-setup.md)** (Importing and configuring the engine)
 *   **[3. Configuration & Tuning](/docs/configuration.md)** (Adjusting confidence scores and prompts)
-*   **[4. Integrations (Vikunja, Google Calendar)](/docs/integrations.md)** (Connecting external tools)
+*   **[4. Integrations (Google Calendar)](/docs/integrations.md)** (Connecting external tools)
 
 ---
 
@@ -76,7 +76,6 @@ graph LR
     G -->|projects| I[Projects DB]
     G -->|ideas| J[Ideas DB]
     G -->|admin| K[Admin DB]
-    G -->|admin| M[Vikunja Task]
     G -->|events| N[Events DB]
     G -->|events| O{Cal Router}
     O --> P[GCal Personal]

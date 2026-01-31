@@ -107,7 +107,7 @@
         "jsonOutput": true,
         "builtInTools": {},
         "options": {
-          "systemMessage": "You are a strict JSON generator for a Second Brain system.\n\nYour task:\n1. Analyze the input and the provided Context (Author).\n2. Classify the input into ONE of these types:\n   - people\n   - projects\n   - ideas\n   - admin\n   - events\n\n3. Based on the type, output JSON that matches the EXACT schema for that type.\n\nYou MUST output valid JSON only.\nNo markdown.\nNo explanation.\nNo extra keys.\nNo missing keys.\n\nSCHEMAS:\n\nIf type = \"people\", output:\n{\n  \"type\": \"people\",\n  \"name\": \"string\",\n  \"context\": \"string\",\n  \"follow_ups\": \"string\",\n  \"confidence\": number\n}\n\nIf type = \"projects\", output:\n{\n  \"type\": \"projects\",\n  \"name\": \"string\",\n  \"status\": \"Active | Waiting | Blocked | Someday | Done\",\n  \"next_action\": \"string\",\n  \"notes\": \"string\",\n  \"confidence\": number\n}\n\nIf type = \"ideas\", output:\n{\n  \"type\": \"ideas\",\n  \"name\": \"string\",\n  \"one_liner\": \"string\",\n  \"notes\": \"string\",\n  \"confidence\": number\n}\n\nIf type = \"admin\", output:\n{\n  \"type\": \"admin\",\n  \"name\": \"string\",\n  \"due_date\": \"YYYY-MM-DD or empty string\",\n  \"assignee\": \"string (Me | Maggie | Other)\",\n  \"status\": \"Open | Done\",\n  \"confidence\": number\n}\n\nIf type = \"events\", output:\n{\n  \"type\": \"events\",\n  \"name\": \"string\",\n  \"start_time\": \"YYYY-MM-DD HH:mm or YYYY-MM-DD\",\n  \"end_time\": \"YYYY-MM-DD HH:mm or empty string\",\n  \"is_all_day\": boolean,\n  \"location\": \"string\",\n  \"description\": \"string\",\n  \"calendar\": \"personal | family | maggie\",\n  \"confidence\": number\n}\n\nRules:\n- Choose the schema strictly based on type.\n- Use empty strings if information is missing.\n- Confidence must be between 0 and 1.\n- If unsure, confidence must be below 0.6.\n- **Context Handling**:\n  - If the context indicates the message is from Maggie, append \"(From Maggie)\" to the notes/description.\n  - If the message implies a task for the user (even if from Maggie), classify as \"admin\".\n  - If the message implies a shared event (e.g., \"we have dinner\"), set calendar to \"family\".\n  - If the message is about Maggie's schedule, set calendar to \"maggie\".\n  - Default calendar is \"personal\".\n"
+          "systemMessage": "You are a strict JSON generator for a Second Brain system.\n\nYour task:\n1. Analyze the input and the provided Context (Author).\n2. Classify the input into ONE of these types:\n   - people\n   - projects\n   - ideas\n   - admin\n   - events\n\n3. Based on the type, output JSON that matches the EXACT schema for that type.\n\nYou MUST output valid JSON only.\nNo markdown.\nNo explanation.\nNo extra keys.\nNo missing keys.\n\nSCHEMAS:\n\nIf type = \"people\", output:\n{\n  \"type\": \"people\",\n  \"name\": \"string\",\n  \"context\": \"string\",\n  \"follow_ups\": \"string\",\n  \"confidence\": number\n}\n\nIf type = \"projects\", output:\n{\n  \"type\": \"projects\",\n  \"name\": \"string\",\n  \"status\": \"Active | Waiting | Blocked | Someday | Done\",\n  \"next_action\": \"string\",\n  \"notes\": \"string\",\n  \"confidence\": number\n}\n\nIf type = \"ideas\", output:\n{\n  \"type\": \"ideas\",\n  \"name\": \"string\",\n  \"one_liner\": \"string\",\n  \"notes\": \"string\",\n  \"confidence\": number\n}\n\nIf type = \"admin\", output:\n{\n  \"type\": \"admin\",\n  \"name\": \"string\",\n  \"notes\": \"string\",\n  \"due_date\": \"YYYY-MM-DD or empty string\",\n  \"assignee\": \"string (Me | Maggie | Other)\",\n  \"status\": \"Open | Done\",\n  \"confidence\": number\n}\n\nIf type = \"events\", output:\n{\n  \"type\": \"events\",\n  \"name\": \"string\",\n  \"start_time\": \"YYYY-MM-DD HH:mm or YYYY-MM-DD\",\n  \"end_time\": \"YYYY-MM-DD HH:mm or empty string\",\n  \"is_all_day\": boolean,\n  \"location\": \"string\",\n  \"description\": \"string\",\n  \"calendar\": \"personal | family | maggie\",\n  \"confidence\": number\n}\n\nRules:\n- Choose the schema strictly based on type.\n- Use empty strings if information is missing.\n- Confidence must be between 0 and 1.\n- If unsure, confidence must be below 0.6.\n- **Context Handling**:\n  - If the context indicates the message is from Maggie, append \"(From Maggie)\" to the notes/description.\n  - If the message implies a task for the user (even if from Maggie), classify as \"admin\".\n  - If the message implies a shared event (e.g., \"we have dinner\"), set calendar to \"family\".\n  - If the message is about Maggie's schedule, set calendar to \"maggie\".\n  - Default calendar is \"personal\".\n"
         }
       },
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
@@ -515,6 +515,10 @@
             {
               "key": "Due Date|date",
               "range": "={{$node[\"Confidence Gate\"].json.parsed.due_date}}"
+            },
+            {
+              "key": "Notes|rich_text",
+              "textContent": "={{$node[\"Confidence Gate\"].json.parsed.notes}}"
             }
           ]
         },
@@ -868,49 +872,6 @@
       ],
       "id": "enrich-context-node-id",
       "name": "Enrich Context"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "VIKUNJA_API_URL/projects/VIKUNJA_PROJECT_ID/tasks",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "Bearer VIKUNJA_API_TOKEN"
-            }
-          ]
-        },
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "title",
-              "value": "={{$('Confidence Gate').item.json.parsed.name}}"
-            },
-            {
-              "name": "description",
-              "value": "={{$('Confidence Gate').item.json.parsed.notes}}"
-            },
-            {
-              "name": "due_date",
-              "value": "={{$('Confidence Gate').item.json.parsed.due_date}}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "name": "Vikunja Task",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [
-        1820,
-        350
-      ],
-      "id": "vikunja_task_node_id"
     },
     {
       "parameters": {
@@ -1299,11 +1260,6 @@
         [
           {
             "node": "Admin Database",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Vikunja Task",
             "type": "main",
             "index": 0
           },

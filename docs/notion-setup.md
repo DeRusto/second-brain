@@ -75,6 +75,7 @@ Create a new page in your Notion workspace called "Second Brain System". Inside 
 | Property Name | Type | Options |
 | :--- | :--- | :--- |
 | **Name** | Title | |
+| **Notes** | Rich Text | |
 | **Due Date** | Date | |
 | **Status** | Select | `Open`, `Done` |
 
