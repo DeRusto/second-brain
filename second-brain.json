@@ -100,7 +100,7 @@
         "messages": {
           "values": [
             {
-              "content": "={{$json.context_string + '\\n\\n' + $json.text}}"
+              "content": "={{($json.context_string || '') + '\\n\\n' + $json.text}}"
             }
           ]
         },
