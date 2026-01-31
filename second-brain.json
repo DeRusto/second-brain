@@ -100,7 +100,7 @@
         "messages": {
           "values": [
             {
-              "content": "={{$json.text}}"
+              "content": "={{$json.context_string + '\\n\\n' + $json.text}}"
             }
           ]
         },
@@ -517,16 +517,12 @@
               "range": "={{$node[\"Confidence Gate\"].json.parsed.due_date}}"
             },
             {
-              "key": "Status|select",
-              "selectValue": "={{$node[\"Confidence Gate\"].json.parsed.status}}"
-            },
-            {
-              "key": "Assignee|select",
-              "selectValue": "={{$node[\"Confidence Gate\"].json.parsed.assignee}}"
-            },
-            {
               "key": "Notes|rich_text",
               "textContent": "={{$node[\"Confidence Gate\"].json.parsed.notes}}"
+            },
+            {
+              "key": "Status|select",
+              "selectValue": "={{$node[\"Confidence Gate\"].json.parsed.status || 'Open'}}"
             }
           ]
         },
