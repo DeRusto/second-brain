@@ -1,6 +1,6 @@
 # Second Brain Integrations Guide
 
-This document covers how to configure the integrations for **Vikunja**, **Google Calendar**, and **Slack Context**.
+This document covers how to configure the integrations for **Google Calendar** and **Slack Context**.
 
 ---
 
@@ -23,33 +23,7 @@ You need to create a new database for Events.
 
 ---
 
-## 2. Vikunja Integration (To-Do List)
-
-The system automatically sends tasks classified as `admin` to Vikunja.
-
-### Prerequisites
-- A self-hosted or cloud Vikunja instance.
-- An API Token.
-- A specific Project (List) ID where tasks will be created.
-
-### Configuration Steps
-
-1.  **Generate API Token**:
-    - Go to User Settings -> API Tokens in Vikunja.
-    - Create a new token with read/write access to tasks.
-2.  **Find Project ID**:
-    - Open the list/project in Vikunja.
-    - The ID is usually in the URL (e.g., `/namespaces/1/lists/42` -> ID is 42) or available in the project settings.
-3.  **Configure n8n**:
-    - Open the **Vikunja Task** node.
-    - Update `URL`: replace `VIKUNJA_API_URL` with your instance URL (e.g., `https://vikunja.mydomain.com/api/v1`).
-    - Update `Project ID`: replace `VIKUNJA_PROJECT_ID` in the URL path.
-    - Update **Headers**:
-        - `Authorization`: `Bearer <YOUR_API_TOKEN>`
-
----
-
-## 3. Google Calendar Integration
+## 2. Google Calendar Integration
 
 The system routes events to different calendars based on context.
 
@@ -78,7 +52,7 @@ Update the `Calendar ID` field in the following nodes with the actual IDs:
 
 ---
 
-## 4. Slack Context (User Identification)
+## 3. Slack Context (User Identification)
 
 To correctly identify messages "From Maggie" or "From Me", you need to map Slack User IDs.
 
