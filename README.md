@@ -142,6 +142,7 @@ graph LR
 | Field | Type | Purpose |
 |-------|------|---------|
 | Name | Title | Task name |
+| Notes | Rich Text | Task details/description |
 | Due Date | Date | Deadline |
 | Status | Select | Open / Done |
 
