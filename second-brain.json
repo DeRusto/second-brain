@@ -807,7 +807,7 @@
         },
         "builtInTools": {},
         "options": {
-          "systemMessage": "You are a daily executive assistant.\n\nCreate a concise daily digest.\nMax 150 words.\nTone: calm, direct, practical.\n\nStructure:\n- Today\u2019s focus (max 3 items)\n- Overdue or risky item (if any)\n- Optional small win or progress\n\nRules:\n- Use only the provided data\n- Do not invent items\n- Do not ask questions\n- No emojis\n- Do NOT use markdown. Output plain text only."
+          "systemMessage": "You are a daily executive assistant.\n\nCreate a concise daily digest.\nMax 150 words.\nTone: calm, direct, practical.\n\nStructure:\n- Today’s focus (max 3 items)\n- Overdue or risky item (if any)\n- Optional small win or progress\n\nRules:\n- Use only the provided data\n- Do not invent items\n- Do not ask questions\n- No emojis\n- Do NOT use markdown. Output plain text only."
         }
       },
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
@@ -827,7 +827,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Grab all data from the 4 Notion nodes, regardless of how many runs they had\nconst people = $(\"People Log\").all();\nconst ideas = $(\"Ideas Log\").all();\nconst projects = $(\"Projects Log\").all();\nconst admin = $(\"Admin Log\").all();\n\n// Combine them into one clean list\nconst combined = [];\nfor (const item of people) combined.push(item.json);\nfor (const item of ideas) combined.push(item.json);\nfor (const item of projects) combined.push(item.json);\nfor (const item of admin) combined.push(item.json);\n\n// Return as a single item so the next node (Gemini) only runs ONCE\nreturn [{\n  json: {\n    all_data: combined,\n    count: combined.length\n  }\n}];"
+        "jsCode": "// Grab all data from the 4 Notion nodes, regardless of how many runs they had\nconst people = $(\"People Log\").all();\nconst ideas = $(\"Ideas Log\").all();\nconst projects = $(\"Projects Log\").all();\nconst admin = $(\"Admin Log\").all();\n\n// Combine them into one clean list\nconst combined = [].concat(\n  people.map((i) => i.json),\n  ideas.map((i) => i.json),\n  projects.map((i) => i.json),\n  admin.map((i) => i.json),\n);\n\n// Return as a single item so the next node (Gemini) only runs ONCE\nreturn [\n  {\n    json: {\n      all_data: combined,\n      count: combined.length,\n    },\n  },\n];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -840,7 +840,7 @@
     },
     {
       "parameters": {
-        "content": "## Data Collection Flow \n - Webhook \u2192 Receives Slack Events (POST /slack-events)\n - Extract Text \u2192 Pulls message text from body.event.text\n - LLM Classifier \u2192 Gemini classifies input into people | projects | ideas | admin (strict JSON)\n - JSON Parse \u2192 Converts model output text into structured JSON\n - Confidence Gate \u2192 confidence > 0.6 auto-file, else mark Needs Review\n - Inbox Log \u2192 Logs every message with text, type, confidence, timestamp\n - Type Router \u2192 Routes item based on parsed.type\n - People DB \u2192 Stores contacts, context, follow-ups\n - Projects DB \u2192 Stores project name, status, next action, notes\n - Ideas DB \u2192 Stores idea name, one-liner, notes\n - Admin DB \u2192 Stores admin tasks with optional due date\n - Needs Review Path \u2192 Low-confidence items flagged for manual review",
+        "content": "## Data Collection Flow \n - Webhook → Receives Slack Events (POST /slack-events)\n - Extract Text → Pulls message text from body.event.text\n - LLM Classifier → Gemini classifies input into people | projects | ideas | admin (strict JSON)\n - JSON Parse → Converts model output text into structured JSON\n - Confidence Gate → confidence > 0.6 auto-file, else mark Needs Review\n - Inbox Log → Logs every message with text, type, confidence, timestamp\n - Type Router → Routes item based on parsed.type\n - People DB → Stores contacts, context, follow-ups\n - Projects DB → Stores project name, status, next action, notes\n - Ideas DB → Stores idea name, one-liner, notes\n - Admin DB → Stores admin tasks with optional due date\n - Needs Review Path → Low-confidence items flagged for manual review",
         "height": 736,
         "width": 2160
       },
@@ -855,7 +855,7 @@
     },
     {
       "parameters": {
-        "content": "## Daily briefing pipeline overview \n - Schedule Trigger \u2192 Runs daily at 9 AM\n - People Log \u2192 Fetches People records edited on or before today\n - Ideas Log \u2192 Fetches Ideas records edited on or before today\n - Projects Log \u2192 Fetches Projects records edited on or before today\n - Admin Log \u2192 Fetches Admin records edited on or before today\n - Merge \u2192 Combines outputs from all four Notion databases\n - Code (JS) \u2192 Flattens all records into a single list and forces single execution\n - LLM Digest \u2192 Gemini generates a concise daily executive summary (plain text)\n - Slack Send \u2192 Posts the daily digest to #sb-inbox channel\n",
+        "content": "## Daily briefing pipeline overview \n - Schedule Trigger → Runs daily at 9 AM\n - People Log → Fetches People records edited on or before today\n - Ideas Log → Fetches Ideas records edited on or before today\n - Projects Log → Fetches Projects records edited on or before today\n - Admin Log → Fetches Admin records edited on or before today\n - Merge → Combines outputs from all four Notion databases\n - Code (JS) → Flattens all records into a single list and forces single execution\n - LLM Digest → Gemini generates a concise daily executive summary (plain text)\n - Slack Send → Posts the daily digest to #sb-inbox channel\n",
         "height": 784,
         "width": 2160
       },
