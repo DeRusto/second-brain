@@ -801,7 +801,7 @@
         "messages": {
           "values": [
             {
-              "content": "=Here is the data from my Notion databases for today's digest:\n\n{{ JSON.stringify($json.all_data, null, 2) }}"
+              "content": "=Here is the data from my Notion databases for today's digest:\n\n{{ JSON.stringify($json.all_data) }}"
             }
           ]
         },
